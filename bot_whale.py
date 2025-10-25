@@ -2,6 +2,7 @@ import os
 import logging
 import requests
 import tweepy
+import json
 from datetime import datetime
 from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -21,8 +22,30 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Store sent whale alerts - prevent duplicates
-sent_whale_alerts = set()
+# Persistent sent whale alerts storage
+SENT_WHALE_FILE = "sent_whale_alerts.json"
+
+def load_sent_whale_alerts():
+    """Load sent whale alerts from JSON file"""
+    try:
+        if os.path.exists(SENT_WHALE_FILE):
+            with open(SENT_WHALE_FILE, 'r') as f:
+                return set(json.load(f))
+    except Exception as e:
+        logger.error(f"Error loading sent_whale_alerts: {e}")
+    return set()
+
+def save_sent_whale_alerts(sent_alerts):
+    """Save sent whale alerts to JSON file"""
+    try:
+        with open(SENT_WHALE_FILE, 'w') as f:
+            json.dump(list(sent_alerts), f)
+    except Exception as e:
+        logger.error(f"Error saving sent_whale_alerts: {e}")
+
+# Load sent alerts at startup
+sent_whale_alerts = load_sent_whale_alerts()
+logger.info(f"🐋 {len(sent_whale_alerts)} whale alert hafızaya yüklendi")
 
 def get_whale_alerts():
     """Fetch from Whale Alert Twitter Account (@whale_alert)"""
@@ -48,7 +71,8 @@ def get_whale_alerts():
                 "url": f"https://twitter.com/whale_alert/status/{tweet.id}",
                 "source": "Whale Alert (@whale_alert)",
                 "type": "whale_alert",
-                "published_at": tweet.created_at.isoformat() if tweet.created_at else datetime.now().isoformat()
+                "published_at": tweet.created_at.isoformat() if tweet.created_at else datetime.now().isoformat(),
+                "tweet_id": tweet.id
             })
         
         logger.info(f"🐋 {len(formatted)} whale alert bulundu")
@@ -83,7 +107,7 @@ def send_whale_alert_to_discord(whale_alert):
                 }
             ],
             "footer": {
-                "text": "Whale Alert Tracker v1"
+                "text": "Whale Alert Tracker v2"
             }
         }
         
@@ -112,25 +136,28 @@ def format_time(iso_time):
 
 def check_whale_alerts():
     """Check for new whale alerts"""
+    global sent_whale_alerts
+    
     try:
         logger.info("\n🐋 Whale Alert'ler kontrol ediliyor...")
         
         alerts = get_whale_alerts()
         
         for alert in alerts:
-            # Create unique ID
-            alert_id = f"{alert.get('title')}:{alert.get('url')}"
+            # Create unique ID using tweet_id
+            alert_id = str(alert.get('tweet_id', f"{alert.get('title')}:{alert.get('url')}"))
             
             # Check if already sent
             if alert_id not in sent_whale_alerts:
                 sent_whale_alerts.add(alert_id)
+                save_sent_whale_alerts(sent_whale_alerts)  # Save immediately
                 
                 logger.info(f"\n🔔 Yeni Whale Alert: {alert.get('description')[:60]}")
                 send_whale_alert_to_discord(alert)
                 
                 time.sleep(1)
         
-        logger.info(f"\n✅ Whale Alert kontrol tamamlandı\n")
+        logger.info(f"\n✅ Whale Alert kontrol tamamlandı (Hafızada {len(sent_whale_alerts)} alert)\n")
         
     except Exception as e:
         logger.error(f"Check Whale Error: {e}")
@@ -154,7 +181,7 @@ def start_scheduler():
     return scheduler
 
 if __name__ == "__main__":
-    logger.info("\n🐋 WHALE ALERT TRACKER BOTU Başlatılıyor...\n")
+    logger.info("\n🐋 WHALE ALERT TRACKER BOTU v2 Başlatılıyor...\n")
     
     scheduler = start_scheduler()
     
