@@ -27,7 +27,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Store sent news
-sent_news = deque(maxlen=5000)
+sent_news = set()  # Set kullan, deque değil!
 
 # RSS Feeds
 RSS_FEEDS = [
@@ -434,7 +434,7 @@ def check_news():
             news_id = f"{title}:{url}"
             
             if news_id not in sent_news:
-                sent_news.append(news_id)
+                sent_news.add(news_id)
                 
                 logger.info(f"\n🔄 Analiz: {title[:50]}")
                 analysis = analyze_with_claude(title, article.get("description", ""))
