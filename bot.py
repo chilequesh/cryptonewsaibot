@@ -198,7 +198,7 @@ SADECE bu JSON formatında cevap ver:
 {{"title_tr": "Türkçe başlık", "summary_tr": "Türkçe özet (max 150 karakter)", "sentiment": "POSITIVE/NEGATIVE/NEUTRAL", "market_impact": "HIGH/MEDIUM/LOW", "news_importance": "CRITICAL/HIGH/MEDIUM/LOW/SKIPPABLE", "price_movement": "Beklenen fiyat hareketi (ör: +3-5%)", "risk_level": "HIGH/MEDIUM/LOW", "recommendation": "BUY/SELL/WAIT/HOLD", "psychology": "Pazar psikolojisi (max 80 karakter)", "whale_behavior": "Whale davranışı (max 80 karakter)", "analysis_tr": "Kısa analiz (max 100 karakter)", "emoji": "Uygun emoji"}}"""
         
         payload = {
-            "model": "claude-3-5-haiku-20241022",
+            "model": "claude-3-5-haiku-20251001",
             "max_tokens": 800,
             "messages": [{"role": "user", "content": prompt}]
         }
