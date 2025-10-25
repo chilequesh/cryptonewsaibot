@@ -7,6 +7,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
 import time
+import hashlib
 
 # Load environment variables
 load_dotenv()
@@ -24,30 +25,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Persistent sent news storage
-SENT_NEWS_FILE = "sent_news.json"
-
-def load_sent_news():
-    """Load sent news from JSON file"""
-    try:
-        if os.path.exists(SENT_NEWS_FILE):
-            with open(SENT_NEWS_FILE, 'r') as f:
-                return set(json.load(f))
-    except Exception as e:
-        logger.error(f"Error loading sent_news: {e}")
-    return set()
-
-def save_sent_news(sent_news):
-    """Save sent news to JSON file"""
-    try:
-        with open(SENT_NEWS_FILE, 'w') as f:
-            json.dump(list(sent_news), f)
-    except Exception as e:
-        logger.error(f"Error saving sent_news: {e}")
-
-# Load sent news at startup
-sent_news = load_sent_news()
-logger.info(f"📚 {len(sent_news)} haberler hafızaya yüklendi")
+# In-memory sent news storage (SESSION BASED - reset on restart is OK)
+# Bu session'da atılan haberler tekrar gelmez
+sent_news_session = set()
 
 # RSS Feeds
 RSS_FEEDS = [
@@ -168,6 +148,11 @@ def get_twitter_news():
     except Exception as e:
         logger.error(f"Twitter Error: {e}")
         return []
+
+def create_unique_hash(title, description):
+    """Create unique hash from title and description"""
+    combined = f"{title}:{description}".lower().strip()
+    return hashlib.md5(combined.encode()).hexdigest()
 
 def analyze_with_claude(title, description):
     """Advanced analysis with Claude - Psychology & Market Behavior"""
@@ -419,7 +404,7 @@ def send_to_discord(news_item, analysis):
                 }
             ],
             "footer": {
-                "text": "Kripto Haber Analiz Botu v2"
+                "text": "Kripto Haber Analiz Botu v3"
             }
         }
         
@@ -439,7 +424,7 @@ def send_to_discord(news_item, analysis):
 
 def check_news():
     """Check all news sources"""
-    global sent_news
+    global sent_news_session
     
     try:
         logger.info("\n🔍 Haberler kontrol ediliyor...")
@@ -452,23 +437,24 @@ def check_news():
         logger.info(f"📰 {len(all_articles)} haber bulundu")
         
         for article in all_articles:
-            title = article.get("title", "")
-            url = article.get("url", "")
-            news_id = f"{title}:{url}"
+            title = article.get("title", "").strip()
+            description = article.get("description", "").strip()
             
-            if news_id not in sent_news:
-                sent_news.add(news_id)
-                save_sent_news(sent_news)  # Save immediately
+            # Create unique hash
+            news_hash = create_unique_hash(title, description)
+            
+            if news_hash not in sent_news_session:
+                sent_news_session.add(news_hash)
                 
                 logger.info(f"\n🔄 Analiz: {title[:50]}")
-                analysis = analyze_with_claude(title, article.get("description", ""))
+                analysis = analyze_with_claude(title, description)
                 
                 if analysis:
                     send_to_discord(article, analysis)
                 
                 time.sleep(2)
         
-        logger.info(f"\n✅ Kontrol tamamlandı (Hafızada {len(sent_news)} haber)\n")
+        logger.info(f"\n✅ Kontrol tamamlandı (Bu session'da {len(sent_news_session)} haber işlendi)\n")
     except Exception as e:
         logger.error(f"Check Error: {e}")
 
@@ -497,7 +483,7 @@ def start_scheduler():
     return scheduler
 
 if __name__ == "__main__":
-    logger.info("\n🤖 KRİPTO HABER ANALIZ BOTU v2 Başlatılıyor...\n")
+    logger.info("\n🤖 KRİPTO HABER ANALIZ BOTU v3 Başlatılıyor...\n")
     
     scheduler = start_scheduler()
     
