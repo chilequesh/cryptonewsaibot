@@ -15,6 +15,7 @@ load_dotenv()
 
 # Configuration
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+WHALE_DISCORD_WEBHOOK_URL = os.getenv("WHALE_DISCORD_WEBHOOK_URL")
 NEWSAPI_KEY = os.getenv("NEWSAPI_KEY")
 CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
 TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN")
@@ -26,8 +27,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Store sent news
-sent_news = set()  # Set kullan, deque değil!
+# Store sent news - FIXED: Use set instead of deque
+sent_news = set()
 
 # RSS Feeds
 RSS_FEEDS = [
@@ -148,6 +149,36 @@ def get_twitter_news():
         logger.error(f"Twitter Error: {e}")
         return []
 
+def get_whale_alerts():
+    """Fetch from Whale Alert Twitter Account"""
+    try:
+        client = tweepy.Client(bearer_token=TWITTER_BEARER_TOKEN)
+        
+        # Get tweets from @whale_alert
+        tweets = client.search_recent_tweets(
+            query="from:whale_alert",
+            max_results=5,
+            tweet_fields=['created_at']
+        )
+        
+        if not tweets.data:
+            return []
+        
+        formatted = []
+        for tweet in tweets.data:
+            formatted.append({
+                "title": "🐋 Whale Alert",
+                "description": tweet.text[:300],
+                "url": f"https://twitter.com/whale_alert/status/{tweet.id}",
+                "source": "Whale Alert",
+                "type": "whale_alert",
+                "published_at": tweet.created_at.isoformat() if tweet.created_at else datetime.now().isoformat()
+            })
+        return formatted
+    except Exception as e:
+        logger.error(f"Whale Alert Error: {e}")
+        return []
+
 def analyze_with_claude(title, description):
     """Advanced analysis with Claude - Psychology & Market Behavior"""
     try:
@@ -241,7 +272,7 @@ SADECE bu JSON formatında cevap ver:
                 logger.error(f"JSON Parse Error: {e}")
                 return None
         else:
-            logger.error(f"Claude API error: {response.status_code} - {response.text}")
+            logger.error(f"Claude API error: {response.status_code}")
             return None
     except Exception as e:
         logger.error(f"Analysis Error: {e}")
@@ -284,7 +315,7 @@ def format_published_time(iso_time):
         return "Zaman bilinmiyor"
 
 def send_to_discord(news_item, analysis):
-    """Send analyzed news to Discord - Minimal Design v14"""
+    """Send analyzed news to Discord - Minimal Design v15"""
     try:
         if not analysis:
             return False
@@ -398,7 +429,7 @@ def send_to_discord(news_item, analysis):
                 }
             ],
             "footer": {
-                "text": "Kripto Haber Analiz Botu v14"
+                "text": "Kripto Haber Analiz Botu v15"
             }
         }
         
@@ -416,6 +447,32 @@ def send_to_discord(news_item, analysis):
         logger.error(f"Send Error: {e}")
         return False
 
+def send_whale_alert(whale_alert):
+    """Send whale alert to whale-alerts channel"""
+    try:
+        embed = {
+            "title": "🐋 Whale Alert - Büyük Cüzdan Hareketi",
+            "description": whale_alert.get("description", ""),
+            "url": whale_alert.get("url", ""),
+            "color": 0xFF6B9D,
+            "footer": {
+                "text": "Whale Alert Tracker"
+            }
+        }
+        
+        payload = {"embeds": [embed]}
+        response = requests.post(WHALE_DISCORD_WEBHOOK_URL, json=payload, timeout=10)
+        
+        if response.status_code in [200, 204]:
+            logger.info(f"🐋 Whale Alert gönderildi")
+            return True
+        else:
+            logger.error(f"Whale Alert Error: {response.status_code}")
+            return False
+    except Exception as e:
+        logger.error(f"Whale Send Error: {e}")
+        return False
+
 def check_news():
     """Check all news sources"""
     try:
@@ -424,6 +481,7 @@ def check_news():
         all_articles = []
         all_articles.extend(get_newsapi_news())
         all_articles.extend(get_twitter_news())
+        all_articles.extend(get_whale_alerts())
         all_articles.extend(get_rss_feed())
         
         logger.info(f"📰 {len(all_articles)} haber bulundu")
@@ -437,10 +495,14 @@ def check_news():
                 sent_news.add(news_id)
                 
                 logger.info(f"\n🔄 Analiz: {title[:50]}")
-                analysis = analyze_with_claude(title, article.get("description", ""))
                 
-                if analysis:
-                    send_to_discord(article, analysis)
+                # Whale alerts don't need Claude analysis
+                if article.get("type") == "whale_alert":
+                    send_whale_alert(article)
+                else:
+                    analysis = analyze_with_claude(title, article.get("description", ""))
+                    if analysis:
+                        send_to_discord(article, analysis)
                 
                 time.sleep(2)
         
@@ -473,7 +535,7 @@ def start_scheduler():
     return scheduler
 
 if __name__ == "__main__":
-    logger.info("\n🤖 KRİPTO HABER ANALIZ BOTU v14 Başlatılıyor...\n")
+    logger.info("\n🤖 KRİPTO HABER ANALIZ BOTU v15 Başlatılıyor...\n")
     
     scheduler = start_scheduler()
     
