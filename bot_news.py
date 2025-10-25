@@ -24,8 +24,30 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Store sent news - FIXED: Use set to prevent duplicates
-sent_news = set()
+# Persistent sent news storage
+SENT_NEWS_FILE = "sent_news.json"
+
+def load_sent_news():
+    """Load sent news from JSON file"""
+    try:
+        if os.path.exists(SENT_NEWS_FILE):
+            with open(SENT_NEWS_FILE, 'r') as f:
+                return set(json.load(f))
+    except Exception as e:
+        logger.error(f"Error loading sent_news: {e}")
+    return set()
+
+def save_sent_news(sent_news):
+    """Save sent news to JSON file"""
+    try:
+        with open(SENT_NEWS_FILE, 'w') as f:
+            json.dump(list(sent_news), f)
+    except Exception as e:
+        logger.error(f"Error saving sent_news: {e}")
+
+# Load sent news at startup
+sent_news = load_sent_news()
+logger.info(f"📚 {len(sent_news)} haberler hafızaya yüklendi")
 
 # RSS Feeds
 RSS_FEEDS = [
@@ -397,7 +419,7 @@ def send_to_discord(news_item, analysis):
                 }
             ],
             "footer": {
-                "text": "Kripto Haber Analiz Botu v1"
+                "text": "Kripto Haber Analiz Botu v2"
             }
         }
         
@@ -417,6 +439,8 @@ def send_to_discord(news_item, analysis):
 
 def check_news():
     """Check all news sources"""
+    global sent_news
+    
     try:
         logger.info("\n🔍 Haberler kontrol ediliyor...")
         
@@ -434,6 +458,7 @@ def check_news():
             
             if news_id not in sent_news:
                 sent_news.add(news_id)
+                save_sent_news(sent_news)  # Save immediately
                 
                 logger.info(f"\n🔄 Analiz: {title[:50]}")
                 analysis = analyze_with_claude(title, article.get("description", ""))
@@ -443,7 +468,7 @@ def check_news():
                 
                 time.sleep(2)
         
-        logger.info(f"\n✅ Kontrol tamamlandı\n")
+        logger.info(f"\n✅ Kontrol tamamlandı (Hafızada {len(sent_news)} haber)\n")
     except Exception as e:
         logger.error(f"Check Error: {e}")
 
@@ -472,7 +497,7 @@ def start_scheduler():
     return scheduler
 
 if __name__ == "__main__":
-    logger.info("\n🤖 KRİPTO HABER ANALIZ BOTU Başlatılıyor...\n")
+    logger.info("\n🤖 KRİPTO HABER ANALIZ BOTU v2 Başlatılıyor...\n")
     
     scheduler = start_scheduler()
     
