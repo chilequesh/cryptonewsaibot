@@ -26,26 +26,26 @@ sent_whale_alerts_session = set()
 
 # Top coins tracking
 TOP_COINS = {
-    "BTC": {"name": "Bitcoin", "threshold": 1000000},
-    "ETH": {"name": "Ethereum", "threshold": 1000000},
-    "SOL": {"name": "Solana", "threshold": 1000000},
-    "XRP": {"name": "Ripple", "threshold": 1000000},
-    "LTC": {"name": "Litecoin", "threshold": 1000000},
-    "USDT": {"name": "Tether", "threshold": 1000000},
-    "USDC": {"name": "USD Coin", "threshold": 1000000},
-    "BNB": {"name": "Binance Coin", "threshold": 1000000},
-    "ADA": {"name": "Cardano", "threshold": 1000000},
-    "DOGE": {"name": "Dogecoin", "threshold": 1000000},
-    "AVAX": {"name": "Avalanche", "threshold": 1000000},
-    "MATIC": {"name": "Polygon", "threshold": 1000000},
-    "LINK": {"name": "Chainlink", "threshold": 1000000},
-    "DOT": {"name": "Polkadot", "threshold": 1000000},
-    "TRX": {"name": "Tron", "threshold": 1000000},
-    "XLM": {"name": "Stellar", "threshold": 1000000},
-    "BCH": {"name": "Bitcoin Cash", "threshold": 1000000},
-    "NEAR": {"name": "NEAR Protocol", "threshold": 1000000},
-    "ICP": {"name": "Internet Computer", "threshold": 1000000},
-    "TAO": {"name": "Bittensor", "threshold": 1000000},
+    "BTC": {"name": "Bitcoin", "threshold": 500000},
+    "ETH": {"name": "Ethereum", "threshold": 500000},
+    "SOL": {"name": "Solana", "threshold": 500000},
+    "XRP": {"name": "Ripple", "threshold": 500000},
+    "LTC": {"name": "Litecoin", "threshold": 500000},
+    "USDT": {"name": "Tether", "threshold": 500000},
+    "USDC": {"name": "USD Coin", "threshold": 500000},
+    "BNB": {"name": "Binance Coin", "threshold": 500000},
+    "ADA": {"name": "Cardano", "threshold": 500000},
+    "DOGE": {"name": "Dogecoin", "threshold": 500000},
+    "AVAX": {"name": "Avalanche", "threshold": 500000},
+    "MATIC": {"name": "Polygon", "threshold": 500000},
+    "LINK": {"name": "Chainlink", "threshold": 500000},
+    "DOT": {"name": "Polkadot", "threshold": 500000},
+    "TRX": {"name": "Tron", "threshold": 500000},
+    "XLM": {"name": "Stellar", "threshold": 500000},
+    "BCH": {"name": "Bitcoin Cash", "threshold": 500000},
+    "NEAR": {"name": "NEAR Protocol", "threshold": 500000},
+    "ICP": {"name": "Internet Computer", "threshold": 500000},
+    "TAO": {"name": "Bittensor", "threshold": 500000},
 }
 
 def get_coin_price(coin_id):
@@ -432,3 +432,4 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(f"Fatal Error: {e}")
         scheduler.shutdown()
+
