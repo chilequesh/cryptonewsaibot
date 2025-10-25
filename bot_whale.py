@@ -94,8 +94,8 @@ def get_bitcoin_large_transfers():
                 amount_btc = amount_satoshi / 100000000
                 usd_value = amount_btc * btc_price
                 
-                # Filter for $1M+
-                if usd_value >= 1000000:
+                # Filter for $500K+
+                if usd_value >= 500000:
                     from_addr = largest_input.get("prev_out", {}).get("addr", "Unknown")
                     to_addr = largest_output.get("addr", "Unknown")
                     
@@ -124,14 +124,11 @@ def get_bitcoin_large_transfers():
         return []
 
 def get_ethereum_large_transfers():
-    """Get large ETH transfers from Etherscan (Free public API)"""
+    """Get large ETH transfers from Blockscout (Free public API)"""
     try:
         logger.info("📊 Ethereum large transfers kontrol ediliyor...")
         
-        # Etherscan has free rate-limited endpoint for getting transactions
-        # Alternative: Use Alchemy free tier or blockscout
-        # For now, using Blockscout (public, no key needed)
-        
+        # Blockscout - free, no key needed
         url = "https://eth.blockscout.com/api/v2/transactions?sort=desc"
         response = requests.get(url, timeout=10)
         
@@ -153,8 +150,8 @@ def get_ethereum_large_transfers():
                 value_eth = value_wei / 1e18
                 usd_value = value_eth * eth_price
                 
-                # Filter for $1M+
-                if usd_value >= 1000000:
+                # Filter for $500K+
+                if usd_value >= 500000:
                     transfers.append({
                         "symbol": "ETH",
                         "coin_name": "Ethereum",
@@ -201,8 +198,8 @@ def get_solana_large_transfers():
                 amount = float(tx.get("amount", 0))
                 usd_value = amount * sol_price
                 
-                # Filter for $1M+
-                if usd_value >= 1000000:
+                # Filter for $500K+
+                if usd_value >= 500000:
                     transfers.append({
                         "symbol": "SOL",
                         "coin_name": "Solana",
@@ -230,7 +227,7 @@ def get_solana_large_transfers():
 def get_multi_chain_transfers():
     """Get large transfers from multiple chains"""
     try:
-        logger.info("\n🐋 Multi-Chain Whale Transfers kontrol ediliyor...")
+        logger.info("\n🐋 Multi-Chain Whale Transfers kontrol ediliyor ($500K+ filtresi)...")
         
         all_transfers = []
         
@@ -250,7 +247,7 @@ def get_multi_chain_transfers():
         if total > 0:
             logger.info(f"🐋 TOPLAM {total} whale transfer bulundu\n")
         else:
-            logger.info("📡 Whale transfer bulunamadı (şimdilik $1M+ transfer yok)\n")
+            logger.info("📡 Whale transfer bulunamadı (şimdilik $500K+ transfer yok)\n")
         
         return all_transfers
         
@@ -290,14 +287,14 @@ def send_whale_alert_to_discord(transfer):
         explorer_url = f"{explorer_base}{tx_hash}"
         
         # Determine color based on amount
-        if usd_value >= 10000000:
-            color = 0xFF0000  # Red for huge transfers
-        elif usd_value >= 5000000:
-            color = 0xFF6600  # Orange
+        if usd_value >= 5000000:
+            color = 0xFF0000  # Red for huge transfers ($5M+)
         elif usd_value >= 2000000:
-            color = 0xFFCC00  # Yellow
+            color = 0xFF6600  # Orange ($2M+)
+        elif usd_value >= 1000000:
+            color = 0xFFCC00  # Yellow ($1M+)
         else:
-            color = 0xFF6B9D  # Pink
+            color = 0xFF6B9D  # Pink ($500K+)
         
         embed = {
             "title": f"🐋 {symbol} Whale Alert - {coin_name}",
@@ -342,7 +339,7 @@ def send_whale_alert_to_discord(transfer):
                 }
             ],
             "footer": {
-                "text": "🔓 100% Free On-Chain Whale Alert Tracker v4.1"
+                "text": "🔓 100% Free On-Chain Whale Alert Tracker v4.2 ($500K+)"
             }
         }
         
@@ -409,13 +406,13 @@ def start_scheduler():
     )
     
     scheduler.start()
-    logger.info("⏱️  On-Chain Whale Alert Şeduler başlatıldı - Her 1 dakikada kontrol\n")
+    logger.info("⏱️  On-Chain Whale Alert Şeduler başlatıldı - Her 1 dakikada kontrol ($500K+ filtresi)\n")
     logger.info("🔓 100% Free APIs - No API Keys Required!\n")
     
     return scheduler
 
 if __name__ == "__main__":
-    logger.info("\n🐋 ON-CHAIN WHALE ALERT TRACKER BOTU v4.1 Başlatılıyor...\n")
+    logger.info("\n🐋 ON-CHAIN WHALE ALERT TRACKER BOTU v4.2 Başlatılıyor ($500K+ Threshold)...\n")
     
     if not WHALE_DISCORD_WEBHOOK_URL:
         logger.error("❌ WHALE_DISCORD_WEBHOOK_URL variable'ı ayarlanmamış!")
@@ -432,4 +429,3 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(f"Fatal Error: {e}")
         scheduler.shutdown()
-
