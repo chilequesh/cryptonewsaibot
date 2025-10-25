@@ -1,0 +1,76 @@
+⚠️ ÖNEMLİ - GIZLI DOSYALAR HAKKINDA
+
+İndirdiğiniz dosyalar arasında şu ikisi bulunmalı:
+✅ env.example
+✅ gitignore
+
+Bu dosyalar "gizli dosyalar" kategorisindedir. İndirdikten sonra şu şekilde yeniden adlandırın:
+
+════════════════════════════════════════════════════════════════
+
+1️⃣ env.example → .env
+
+   Neden? 
+   - Lokal makine'de bot çalıştırırken API keyleriniz burada olacak
+   - GitHub'a push yaparken .gitignore bunu otomatik gizleyecek
+   
+   Nasıl?
+   a) env.example dosyasını aç
+   b) İçindekileri kopyala
+   c) Yeni dosya oluştur: .env
+   d) API keylerinizi orada yazın:
+      DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+      NEWSAPI_KEY=23c82d4a2f5740078086dec33618c785
+      CLAUDE_API_KEY=sk-ant-api03-...
+      vb.
+   e) Kaydet
+
+════════════════════════════════════════════════════════════════
+
+2️⃣ gitignore → .gitignore
+
+   Neden?
+   - GitHub'a push yaparken hassas dosyaları gizler
+   - .env, __pycache__, vb. dosyalar yüklenmez
+   
+   Nasıl?
+   a) gitignore dosyasını aç
+   b) İçindekileri kopyala
+   c) Yeni dosya oluştur: .gitignore
+   d) İçeriği yapıştır
+   e) Kaydet
+
+════════════════════════════════════════════════════════════════
+
+⚡ KOLAY YOL (Terminal'de):
+
+Linux/Mac:
+  mv env.example .env
+  mv gitignore .gitignore
+
+Windows (PowerShell):
+  Rename-Item -Path "env.example" -NewName ".env"
+  Rename-Item -Path "gitignore" -NewName ".gitignore"
+
+════════════════════════════════════════════════════════════════
+
+✅ AYLAR SONRA KONTROL LISTESI:
+
+[ ] env.example → .env yeniden adlandırıldı
+[ ] gitignore → .gitignore yeniden adlandırıldı
+[ ] .env dosyasında API keyleri yazıldı
+[ ] .gitignore GitHub'a hazır
+
+════════════════════════════════════════════════════════════════
+
+❓ NEDEN NOKTA OLMADAN İNDİRİLDİ?
+
+Windows Explorer ve bazı sistemlerde nokta ile başlayan dosyalar
+(hidden files) varsayılan olarak gizli kalıyor. Download linki
+üzerinden indirilen dosyalarda da bu sorun oluşabiliyor.
+
+Çözüm: Elle yeniden adlandırmak (ya da terminal komutu)
+
+════════════════════════════════════════════════════════════════
+
+Sorun yaşarsan haber ver! 😊
