@@ -241,7 +241,7 @@ SADECE bu JSON formatında cevap ver:
                 logger.error(f"JSON Parse Error: {e}")
                 return None
         else:
-            logger.error(f"Claude API error: {response.status_code}")
+            logger.error(f"Claude API error: {response.status_code} - {response.text}")
             return None
     except Exception as e:
         logger.error(f"Analysis Error: {e}")
